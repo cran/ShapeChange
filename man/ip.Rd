@@ -10,7 +10,7 @@
 
 \arguments{
   \item{x}{The predictor vector.}
-  \item{sh}{If sh is \eqn{1}, then the estimated curve is convex-concave; if sh is \eqn{-1}, it is concave-convex.}
+  \item{sh}{If sh is \eqn{1}, then the estimated curve is convex-concave; if sh is \eqn{-1}, it is concave-convex. Note that when the response is binomial, sh is always \eqn{1}. The default is sh = \eqn{1}.}
 }
 
 \value{The vector "x" with three attributes, i.e., nm: the name of x; categ: the category of the change-point, "inflect"; sh: the shape constraint on the estimated curve: \eqn{1} (convex-concave) or \eqn{-1} (concave-convex).
@@ -32,6 +32,7 @@
   set.seed(123)
   y = 5 * (1 + tanh(10 * (x - .5)))  + rnorm(n, sd = 1)
   ans = changept(y ~ ip(x, sh = 1), fir = TRUE)
+
   plot(ans)
 }
 

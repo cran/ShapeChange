@@ -21,8 +21,8 @@ See \code{\link{changept}} for more details.
 \tabular{ll}{
 Package: \tab ShapeChange\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2015-10-06\cr
+Version: \tab 1.1\cr
+Date: \tab 2015-11-14\cr
 License: \tab GPL (>= 2)\cr
 }
 }
