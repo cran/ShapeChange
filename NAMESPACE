@@ -1,7 +1,7 @@
 export("changept", "ip", "tp","jp")
 import("coneproj", "quadprog")
 importFrom("stats", "gaussian", "binomial", "poisson", "model.frame", "model.matrix", "model.response", "pchisq", "printCoefmat", "pt", "quantile", "rnorm", "rpois", "rbinom", "arima.sim", "delete.response", "fitted", "runif", "uniroot")
-importFrom("graphics", "legend", "lines", "plot", "points", "rug", "text")
+importFrom("graphics", "legend", "lines", "plot", "points", "rug", "text", "abline")
 importFrom("utils", "tail")
 S3method(fitted, ShapeChange)
 S3method(coef, ShapeChange)

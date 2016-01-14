@@ -107,9 +107,9 @@ changept = function(formula, family = gaussian(), data = NULL, k = NULL, knots =
 		}
 	}
 #check
-	#if (!is.null(zmat)) {
-	#	colnames(zmat) = paste(znms, vals[(length(vals) - ncol(zmat) + 1):length(vals)], sep = "")
-	#}
+	if (!is.null(zmat)) {
+		colnames(zmat) = paste(znms, vals[(length(vals) - ncol(zmat) + 1):length(vals)], sep = "")
+	}
   	ans = changept.fit(x, y, zmat = zmat, family = family, categ = categ, m = k, knots = knots, sh = sh, fir = fir, q = q, pnt = pnt, pen = pen, arp = arp, ci = ci, nloop = nloop, trd1 = trd1, trd2 = trd2, up = up, constr = constr, wt.iter = wt.iter, param = param)
   	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, coefs = ans$bhat, zcoefs = ans$zcoefs, cibt = ans$cibt, categ = categ, sh = sh, x = x, y = y, xnm = xnm, znms = znms, ynm = ynm, m_i = ans$m_i, pos = ans$pos, sub = ans$sub, family = family, wt.iter = wt.iter, zmat = zmat, vals = vals, is_fac = is_fac, zid = zid, zid1 = zid1, zid2 = zid2, tms = mt, msbt = ans$msbt, bmat = ans$bmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, lambda = ans$lambda, lams = ans$lams, phisbt = ans$phisbt, sigsbt = ans$sigsbt)
   	rslt$call = cl
@@ -170,14 +170,17 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
              				if (param) {
                 				esim = as.vector(arima.sim(n = n, list(order = c(ans_p, 0, 0), ar = ans_phi), sd = sqrt(ans_sig)))
              				} else {
+						#r0 = ans$r0
                					rmat = ans$rmat
+						#rmat = rmat * r0
                					yvec = ans$fhat
                					evec = matrix(ans$es, ncol = 1)
                					umat = chol(rmat)
                					e_iid = as.vector(solve(t(umat), evec))
                					esamp = matrix(sample(e_iid, size = n, replace = TRUE), ncol = 1)
-               					esim = sqrt(ans_sig) * crossprod(umat, esamp)
-             				}
+               					#esim = sqrt(ans_sig) * crossprod(umat, esamp)
+             					esim = crossprod(umat, esamp)
+						}
            			}
 				ysim = yvec + esim
 			} else if (family$family == "binomial") {
@@ -227,7 +230,7 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
   	}
 	cibt = quantile(sort(msbt), probs = c(.025, .975))
 	}
-	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, sse = ans$sse, df = ans$df, pos = ans$pos, dist = ans$dist, bhat = ans$bhat, zcoefs = ans$zcoefs, pvals.beta = ans$pvals.beta, se.beta = ans$se.beta, tval = ans$tval, cibt = cibt, m_i = ans$m_i, sub = ans$sub, tr = ans$tr, trr = ans$trr, tru = ans$tru, msbt = msbt, phisbt = phisbt, psbt = psbt, sigsbt = sigsbt, bmat = ans$bmat, dmat = ans$dmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, aiclst = ans$aiclst, es = ans$es, lambda = ans$lambda, lams = ans$lams, rmat = ans$rmat, aicmat = ans$aicmat, sigmat = ans$sigmat, trsmat = ans$trsmat, trrsmat = ans$trrsmat, psmat = ans$psmat, fsmat = ans$fsmat, phismat = ans$phismat, psmat = ans$psmat, pensmat = ans$pensmat, sig_tst = ans$sig_tst, tr_tst = ans$tr_tst, lambda_tst = ans$lambda_tst, hs = hs0, ids = ids0)
+	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, sse = ans$sse, df = ans$df, pos = ans$pos, dist = ans$dist, bhat = ans$bhat, zcoefs = ans$zcoefs, pvals.beta = ans$pvals.beta, se.beta = ans$se.beta, tval = ans$tval, cibt = cibt, m_i = ans$m_i, sub = ans$sub, tr = ans$tr, trr = ans$trr, tru = ans$tru, msbt = msbt, phisbt = phisbt, psbt = psbt, sigsbt = sigsbt, bmat = ans$bmat, dmat = ans$dmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, aiclst = ans$aiclst, es = ans$es, lambda = ans$lambda, lams = ans$lams, rmat = ans$rmat, aicmat = ans$aicmat, sigmat = ans$sigmat, trsmat = ans$trsmat, trrsmat = ans$trrsmat, psmat = ans$psmat, fsmat = ans$fsmat, phismat = ans$phismat, psmat = ans$psmat, pensmat = ans$pensmat, hs = hs0, ids = ids0)
 	rslt
 }
 
@@ -295,11 +298,10 @@ residuals.ShapeChange = function(object, ...) {
 }
 
 ##########################
-plot.ShapeChange = function(x, y = NULL, tt = TRUE, xlab = NULL, ylab = NULL, color = "mediumorchid4", type = "p", lty = 1, lwd = 2, cex = .5, has.leg = TRUE, loc = NULL, rugged = FALSE, detailed = FALSE,...) {
+plot.ShapeChange = function(x, y = NULL, tt = TRUE, xlab = NULL, ylab = NULL, color = "mediumorchid4", type = "p", lty = 1, lwd = 2, cex = .5, has.leg = FALSE, loc = NULL, rugged = FALSE, detailed = FALSE,...) {
 	if (!inherits(x, "ShapeChange")) { 
 		warning("calling plot.ShapeChange(<fake-ShapeChange-object>) ...")
  	}
- 	#cl = match.call()
  	object = x
  	x = object$x
 	zmat = object$zmat
@@ -384,7 +386,7 @@ plot.ShapeChange = function(x, y = NULL, tt = TRUE, xlab = NULL, ylab = NULL, co
     	} else {
       		stop ("Wrong Shape!!")
     	}
-    		main = paste(tt0, round(chpt, 4))
+    		main = paste(tt0, round(chpt, 2))
   	} else { 
     		main = NULL
   	}
@@ -446,7 +448,7 @@ plot.ShapeChange = function(x, y = NULL, tt = TRUE, xlab = NULL, ylab = NULL, co
 			}
 		}
 	}
-	text(chpt, ylim[1], round(chpt, 4), col = color, lwd = 2)
+	#text(chpt, ylim[1], round(chpt, 4), col = color, lwd = 2)
 	if (!is.null(ci)) {
 		lvl = 95
 		if (is.null(loc)) {
@@ -457,6 +459,8 @@ plot.ShapeChange = function(x, y = NULL, tt = TRUE, xlab = NULL, ylab = NULL, co
 			} 
 		}
 		legend(loc, bty = "n", paste(lvl, "%", c("Bootstrap C.I.  "), "[", round(ci[1], 4), ",", round(ci[2], 4), "]"), col = color, cex = 1)
+		abline(v = ci[1], lty = 2)
+		abline(v = ci[2], lty = 2)
 	}
 	if (has.leg) {
 		if (is.null(zmat)) {
@@ -700,7 +704,7 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 		}
 	}
 	m2 = m
-	ans = bqspl(x, m = m2, knots = knots)
+	ans = bqspl(x, m = m2, knots = knots, pnt = pnt)
 	knots = ans$knots
 	bmat = ans$bmat
 	#nkts = length(knots)
@@ -743,9 +747,16 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
     		if (!wt.iter) {
        			dv0 = crossprod(dmat)
        			if (!arp) {
-          			if (pen == 0) {
-             				pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
-          			}
+          			#if (pen == 0) {
+             			#	pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+          			#}
+				if (pen == 0) {
+					if (m < 6) {
+	             				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					} else {
+						pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					}
+		        	}
           			lambdas = pen 
        			}
        			if (arp & is.null(p_bt)) {        
@@ -771,12 +782,11 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 		dmat = NULL 
 	}
 	dfmat = bmat %*% solve(qv, t(bmat))
+	lambda = lambdas = 0
   	pos = pos2 = NULL
-	tr = trr = sig = aics = es = lambda = rmat = phi = minsse = NULL
+	tr = trr = sig = aics = es = rmat = phi = minsse = NULL
 	aiclst = aicmat = sigmat = trsmat = trrsmat = trslst = psmat = fsmat = phismat = psmat = pensmat = NULL
   	tr_use0 = tr_use = trr_use = NULL
-	sig_tst = tr_tst = lambda_tst = NULL
-#print (tr_use)
 	if (!wt.iter) {
 		cv = crossprod(bmat, y)
     		smat = slopes
@@ -822,7 +832,7 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 				iterlst = iterlst + 1
             			sl = smat 
 		      		sl[j:m2, ] = -sl[j:m2, ]
-            			qans = make_arp(y, pnt = pnt, dmat = dmat, bmat = bmat, sl = sl, p_max = 4, m2 = m2, lambdas = lambdas, pen_fit = pen_bt, p_fit = p_bt, dv0 = dv0, qv0 = qv0, cv = cv, hs = hs, ids = ids)
+            			qans = make_arp(y, pnt = pnt, dmat = dmat, bmat = bmat, sl = sl, p_max = 2, m2 = m2, lambdas = lambdas, pen_fit = pen_bt, p_fit = p_bt, dv0 = dv0, qv0 = qv0, cv = cv, hs = hs, ids = ids)
 				bh = qans$thetahat
             			theta = qans$fhat_use
 				theta_x = bmat[, 1:(m2 + 1), drop = FALSE] %*% bh[1:(m2 + 1), , drop = FALSE] 
@@ -852,10 +862,10 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 			phismat = phislst[[miniter]] 
 			pensmat = penslst[[miniter]]  
 			id_minaic = which(aicmat == min(aicmat))
-			sig_tst = sigmat[id_minaic]
 			aics = aicmat 
-			tr_tst = trsmat[id_minaic]
-			lambda_tst = pensmat[id_minaic] 			                         		
+			#sig_tst = sigmat[id_minaic]
+			#tr_tst = trsmat[id_minaic]
+			#lambda_tst = pensmat[id_minaic] 			                         		
 		}
 	} else {
 		if (!is.null(zmat)) {
@@ -878,7 +888,7 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 					pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
 				}
 	        	}
-			lambda = pen
+			lambda = pen; lambdas = pen 
           		qv = qv0 + pen * crossprod(dmat)
 #print (pen)
        		}
@@ -943,26 +953,6 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 			if (llh < minllh) {thb = muhat; thb_x = muhat_x; thb_eta = etahat; thb_eta_x = etahat_x; minllh = llh; pos = j; bhat = bh; tr = tr}
 		}
 	}
-	if (!is.null(zmat)) {
-		zcoefs = bhat[(m2 + 2):(m2 + 2 + np - 1)]
-		df_obs = sum(abs(bhat) > 0)
-		prior.w = 1:n*0 + 1
-		w = diag(as.vector(prior.w / deriv.fun(thb, fml = family$family)))
-		sse1 = sum(prior.w * (y - thb)^2)
-     		if ((n - np - 1.5 * (df_obs - np)) <= 0) {
-		 	  sdhat2 = sse1
-     		} else {
-			 sdhat2 = sse1 / (n - np - 1.5 * (df_obs - np))
-     		}
-     		if (wt.iter) {
-			  se2 = solve(t(zmat) %*% w %*% zmat)
-     		} else {
-			  se2 = solve(t(zmat) %*% diag(prior.w) %*% zmat) * sdhat2
-     		}		 			
-     		se.beta = sqrt(diag(se2))
-     		tstat = zcoefs / se.beta
-     		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
-  	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
   	dist = round(slopes %*% bhat[1:(m2 + 1)], 6)
 	sub = NULL 
 	if (abs(dist[pos]) < sm) {
@@ -1059,11 +1049,31 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 		thb_x = -thb_x
 		bhat = -bhat
 	}
+	if (!is.null(zmat)) {
+		zcoefs = bhat[(m2 + 2):(m2 + 2 + np - 1)]
+		df_obs = sum(abs(bhat) > 0)
+		prior.w = 1:n*0 + 1
+		w = diag(as.vector(prior.w / deriv.fun(thb, fml = family$family)))
+		sse1 = sum(prior.w * (y - thb)^2)
+     		if ((n - np - 1.5 * (df_obs - np)) <= 0) {
+		 	  sdhat2 = sse1
+     		} else {
+			 sdhat2 = sse1 / (n - np - 1.5 * (df_obs - np))
+     		}
+     		if (wt.iter) {
+			  se2 = solve(t(zmat) %*% w %*% zmat)
+     		} else {
+			  se2 = solve(t(zmat) %*% diag(prior.w) %*% zmat) * sdhat2
+     		}		 			
+     		se.beta = sqrt(diag(se2))
+     		tstat = zcoefs / se.beta
+     		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
+  	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
 	distp = dist[pos]
 	chpt = chpt * (max(xs) - min(xs)) + min(xs)
 	knots = knots * (max(xs) - min(xs)) + min(xs)
 	if (!wt.iter) {thb_eta_x = thb_x; thb_eta = thb}
-	ans = list(fhat = thb, fhat_x = thb_x, fhat_eta = thb_eta, fhat_eta_x = thb_eta_x, bhat = bhat, sse = minsse, pos = pos, chpt = chpt, knots = knots, dmat = dmat, tr = tr, trr = trr, tru = tr_use0, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, aiclst = aiclst, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, psmat = psmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat, sig_tst = sig_tst, tr_tst = tr_tst, lambda_tst = lambda_tst)
+	ans = list(fhat = thb, fhat_x = thb_x, fhat_eta = thb_eta, fhat_eta_x = thb_eta_x, bhat = bhat, sse = minsse, pos = pos, chpt = chpt, knots = knots, dmat = dmat, tr = tr, trr = trr, tru = tr_use0, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, aiclst = aiclst, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, psmat = psmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
 	ans 
 }
 
@@ -1114,7 +1124,7 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 		}
 	}
 	m2 = m
-	ans = bcspl(x, m = m2, knots = knots)
+	ans = bcspl(x, m = m2, knots = knots, pnt = pnt)
 	knots = ans$knots
 	bmat = ans$bmat
 	secder = ans$secder
@@ -1156,9 +1166,16 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
     		dv0 = crossprod(dmat)
     		if (!wt.iter) {
        			if (!arp) {
-          			if (pen == 0) {
-             				pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
-          			}
+          			#if (pen == 0) {
+             			#	pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+          			#}
+				if (pen == 0) {
+					if (m < 8) {
+	             				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					} else {
+						pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					}
+		        	}
           			lambdas = pen 
        			}
        			if (arp & is.null(p_bt)) {        
@@ -1179,12 +1196,12 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 	} 
 	dfmat = bmat %*% solve(qv, t(bmat))
 	tru = tr_use = sum(diag(dfmat))
-	aics = minsse = nrep = pos = pos2 = NULL
 	dfmat = bmat %*% solve(qv, t(bmat))
-	tr = sig = aics = es = lambda = rmat = phi = NULL
+	aics = minsse = nrep = pos = pos2 = NULL
+	lambda = lambdas = 0 
+	tr = sig = aics = es = rmat = phi = NULL
 	aicmat = sigmat = trsmat = trrsmat = trslst = psmat = fsmat = phismat = psmat = pensmat = NULL
  	tr_use0 = tr_use = trr_use = NULL
-	sig_tst = tr_tst = lambda_tst = NULL
 	if (!wt.iter) {
 		if (sh == -1) {
 #concave-convex
@@ -1255,7 +1272,7 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
                				sl[m2 + 1, 1:(m2 + 2)] = ans_x1 
                				sl[m2 + 2, 1:(m2 + 2)] = ans_xn  
            			}
-           			qans = make_arp(y, pnt = pnt, dmat = dmat, bmat = bmat, sl = sl, p_max = 4, m2 = m2, lambdas = lambdas, pen_fit = pen_bt, p_fit = p_bt, dv0 = dv0, qv0 = qv0, cv = cv, hs = hs, ids = ids)
+           			qans = make_arp(y, pnt = pnt, dmat = dmat, bmat = bmat, sl = sl, p_max = 2, m2 = m2, lambdas = lambdas, pen_fit = pen_bt, p_fit = p_bt, dv0 = dv0, qv0 = qv0, cv = cv, hs = hs, ids = ids)
 				bh = qans$thetahat
             			theta = qans$fhat_use
 				theta_x = bmat[, 1:(m2 + 2), drop = FALSE] %*% bh[1:(m2 + 2), , drop = FALSE] 
@@ -1285,10 +1302,7 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 			phismat = phislst[[miniter]] 
 			pensmat = penslst[[miniter]]  
 			id_minaic = which(aicmat == min(aicmat))
-			sig_tst = sigmat[id_minaic]
-			aics = aicmat
-			tr_tst = trsmat[id_minaic]
-			lambda_tst = pensmat[id_minaic] 	                 
+			aics = aicmat	                 
     		}
 	} else { 
 #concave-convex
@@ -1302,7 +1316,7 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 				}
 			} 
 			qv = qv0 + pen * dv0
-			lambda = pen
+			lambda = pen; lambdas = pen
          	} 
          	dfmat = bmat %*% solve(qv, t(bmat))
          	tr_use = sum(diag(dfmat))
@@ -1457,27 +1471,6 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
         		thb[round(thb, 8) == 0] = 0                    
       		}
 	}
-  	if (!is.null(zmat)) {
-		zcoefs = bhat[(m2 + 3):(m2 + 3 + np - 1)]
-     		df_obs = sum(abs(bhat) > 0)
-		#df_obs = df		
-		prior.w = 1:n*0 + 1
- 		w = diag(as.vector(prior.w / deriv.fun(thb, fml = family$family)))
-     		sse1 = sum(prior.w * (y - thb)^2)
-     		if ((n - np - 1.5 * (df_obs - np)) <= 0) {
-			sdhat2 = sse1
-     		} else {
-			sdhat2 = sse1 / (n - np - 1.5 * (df_obs - np))
-     		}
-     		if (wt.iter) {
-			se2 = solve(t(zmat) %*% w %*% zmat)
-     		} else {
-			se2 = solve(t(zmat) %*% diag(prior.w) %*% zmat) * sdhat2
-     		}		 			
-     		se.beta = sqrt(diag(se2))
-     		tstat = zcoefs / se.beta
-     		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
-  	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
   	dist = round(secder %*% bhat[1:(m2 + 2), ,drop = FALSE], 6) 
 	sub = iter = NULL
 	if (abs(dist[pos]) < sm) {
@@ -1572,10 +1565,31 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 		thb_x = -thb_x
 		bhat = -bhat
    	} 
+	if (!is.null(zmat)) {
+		zcoefs = bhat[(m2 + 3):(m2 + 3 + np - 1)]
+     		df_obs = sum(abs(bhat) > 0)
+		#df_obs = df		
+		prior.w = 1:n*0 + 1
+ 		w = diag(as.vector(prior.w / deriv.fun(thb, fml = family$family)))
+     		sse1 = sum(prior.w * (y - thb)^2)
+     		if ((n - np - 1.5 * (df_obs - np)) <= 0) {
+			sdhat2 = sse1
+     		} else {
+			sdhat2 = sse1 / (n - np - 1.5 * (df_obs - np))
+     		}
+     		if (wt.iter) {
+			se2 = solve(t(zmat) %*% w %*% zmat)
+     		} else {
+			se2 = solve(t(zmat) %*% diag(prior.w) %*% zmat) * sdhat2
+     		}		 			
+     		se.beta = sqrt(diag(se2))
+     		tstat = zcoefs / se.beta
+     		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
+  	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
 	chpt = chpt * (max(xs) - min(xs)) + min(xs)
 #new: scale knots back
 	knots = knots * (max(xs) - min(xs)) + min(xs)
-	ans = list(fhat = thb, fhat_x = thb_x, bhat = bhat, sse = minsse, chpt = chpt, knots = knots, tr = tr, tru = tru, pos = pos, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat, sig_tst = sig_tst, tr_tst = tr_tst, lambda_tst = lambda_tst)
+	ans = list(fhat = thb, fhat_x = thb_x, bhat = bhat, sse = minsse, chpt = chpt, knots = knots, tr = tr, tru = tru, pos = pos, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
 	 ans 
 }
 
@@ -1623,7 +1637,7 @@ jp.pts = function(x, y, zmat = NULL, jpt, i = NULL, m = NULL, knots = NULL, q = 
 			}
 		}
 	}
-	ans = bqspl(x, m = m, knots = knots, pic = FALSE)
+	ans = bqspl(x, m = m, knots = knots, pic = FALSE, pnt = pnt)
 	knots = ans$knots
 	slopes = ans$slopes
 	bmat = ans$bmat
@@ -1648,10 +1662,12 @@ jp.pts = function(x, y, zmat = NULL, jpt, i = NULL, m = NULL, knots = NULL, q = 
 #new:
 	if (!is.null(zmat)) {
 		djump = cbind(djump, zmat)
+		np = ncol(zmat)
 	}
 #new: pnt, qv
+	lambda = lambdas = 0 
 	tr = tru = sub = kts_in = NULL
-	rmat = phi = sig = aics = tr = trr = es = lambda = NULL
+	rmat = phi = sig = aics = tr = trr = es = theta = etahat = theta_x = etahat_x = NULL
 	if (constr) {
 		dist = knots - (x[i] + x[i + 1]) / 2
 		obs = 1:m
@@ -1795,11 +1811,17 @@ smat[m + 1, mj - 1] = 1
 			}    
     			dv0 = crossprod(dmat)
        			if (!arp) {
-          			if (pen == 0) {
-             				pen = find_pen(aims = 6, Q = qv0, B = djump, D = dv0, PNT = pnt)
-          			}
-          			lambdas = pen 
-				lambda = pen
+          			#if (pen == 0) {
+             			#	pen = find_pen(aims = 6, Q = qv0, B = djump, D = dv0, PNT = pnt)
+          			#}
+				if (pen == 0) {
+					if (mj2 < 8) {
+	             				pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+					} else {
+						pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+					}
+		        	}
+          			lambdas = pen
        			}
        			if (arp & is.null(p_bt)) {        
 	        		if (mj2 < 10) {
@@ -1862,11 +1884,19 @@ smat[m + 1, mj - 1] = 1
 			cvec = wt * etahat - gr
 			qvk = crossprod(djump, diag(wt)) %*% djump
 	        	if (pnt) {
+				#if (pen == 0) {
+	              		#	pen = find_pen(aims = 6, B = djump, D = dmat, PNT = pnt)
+				#}
 				if (pen == 0) {
-	              			pen = find_pen(aims = 6, B = djump, D = dmat, PNT = pnt)
-				}
+					if (mj2 < 8) {
+	             				pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+					} else {
+						pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+					}
+		        	}
 				qvk = qvk + pen * dv0
-	        	}
+				lambda = pen; lambdas = pen        	
+			}
 			cveck = crossprod(djump, cvec)			
 			qans = qprog(qvk, cveck, smat, 1:nrow(smat)*0, msg = FALSE)
 			bhat = qans$thetahat
@@ -1906,13 +1936,100 @@ smat[m + 1, mj - 1] = 1
 			if (i == 1 | i == (n - 1)) {
 				djump = djump[, -mj, drop = FALSE] 
 			}	
-			bhat = solve(crossprod(djump), crossprod(djump, y))
-			theta = djump %*% bhat		
+			qv0 = crossprod(djump)
+			qv = qv0
+			cv = crossprod(djump, y)
+			if (pnt) {
+				mj2 = ncol(djump)
+				dmat = matrix(0, nrow = (mj2 - q), ncol = mj2)
+#  third-order
+				if (q == 3) {
+					for (idm in 4:mj2) {
+						dmat[idm - 3, idm - 3] = 1; dmat[idm - 3, idm - 2] = -3; dmat[idm - 3, idm - 1] = 3; dmat[idm - 3, idm] = -1
+					}
+				}
+# second order
+				if (q == 2) {
+					for (idm in 3:mj2) {
+						dmat[idm - 2, idm - 2] = 1; dmat[idm - 2, idm - 1] = -2; dmat[idm - 2, idm] = 1
+					}
+				}
+# first order
+				if (q == 1) {
+					for (idm in 2:mj2) {
+						dmat[idm - 1, idm - 1] = 1; dmat[idm - 1, idm] = -1
+					}
+				}
+# zero order
+				if (q == 0) {
+					for (idm in 1:mj2) {
+						dmat[idm, idm] = 1
+					}
+				}    
+    				dv0 = crossprod(dmat)
+       				if (!arp) {
+					if (pen == 0) {
+						if (mj2 < 8) {
+	             					pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						} else {
+							pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						}
+		        		}
+          				lambdas = pen
+       				}
+       				if (arp & is.null(p_bt)) {        
+	        			if (mj2 < 10) {
+						aims = 5:mj2
+         				} else {
+            					aims = 5:10
+         				}
+         				if (is.null(lambdas)) {
+            					if (pen == 0) {
+               						lambdas = find_pen(aims = aims, Q = qv0, B = djump, D = dv0, PNT = pnt)
+            					} else {
+               						lambdas = pen
+            					}
+         				}
+       				} 
+      				if (!is.null(p_bt)) {
+          				lambdas = as.vector(pen_bt)
+       				}
+       				la = length(lambdas)
+				qv = qv + pen * dv0
+			} 	
+			if (!arp) {
+				bhat = solve(qv, cv)				
+				#bhat = solve(crossprod(djump), crossprod(djump, y))
+				theta = djump %*% bhat		
+				#nd = ncol(djump)
+				#if (!is.null(zmat)) {
+				#	nd = nd - ncol(zmat)
+				#}
+				#theta_x = djump[, 1:nd, drop = FALSE] %*% bhat[1:nd, ,drop = FALSE]
+				#df = n - ncol(djump)
+			} else {
+				qans = make_arp(y, pnt = pnt, dmat = dmat, bmat = djump, sl = NULL, p_max = 4, m2 = m, lambdas = lambdas, pen_fit = pen_bt, p_fit = p_bt, dv0 = dv0, qv0 = qv0, cv = cv, hs = hs, ids = ids, constr = FALSE)
+				bhat = qans$thetahat
+	            		theta = qans$fhat_use
+				#nd = ncol(djump)
+				#if (!is.null(zmat)) {
+				#	nd = nd - ncol(zmat)
+				#}
+				#theta_x = djump[, 1:nd, drop = FALSE] %*% bhat[1:nd, , drop = FALSE]
+	            		rmat = qans$r_use
+				phi = qans$phi_use
+	            		sig = qans$sig_use
+	            		aics = qans$aics
+	            		tr = qans$tr_use
+				trr = qans$trr_use
+	            		es = qans$es_use
+	            		lambda = qans$lambda_use
+			}
 			nd = ncol(djump)
 			if (!is.null(zmat)) {
 				nd = nd - ncol(zmat)
 			}
-			theta_x = djump[, 1:nd] %*% bhat[1:nd, ,drop = FALSE]
+			theta_x = djump[, 1:nd, drop = FALSE] %*% bhat[1:nd, ,drop = FALSE]
 			df = n - ncol(djump)
 		} else {
 			etahat = etahat.fun(n, y, fml = family$family)
@@ -1921,10 +2038,18 @@ smat[m + 1, mj - 1] = 1
 			cvec = wt * etahat - gr
 			qvk = crossprod(djump, diag(wt)) %*% djump
         		if (pnt) {
+				#if (pen == 0) {
+       		 	      	#	pen = find_pen(aims = 6, B = djump, D = dmat, PNT = pnt)
+				#}
 				if (pen == 0) {
-       		 	      		pen = find_pen(aims = 6, B = djump, D = dmat, PNT = pnt)
-				}
+					if (mj2 < 8) {
+             					pen = find_pen(aims = mj2, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					} else {
+						pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					}
+	        		}
 				qvk = qvk + pen * dv0
+				lambda = pen; lambdas = pen
        	 		}
 			cveck = crossprod(djump, cvec)			
 			bhat = solve(qvk, cveck)
@@ -1963,8 +2088,30 @@ smat[m + 1, mj - 1] = 1
 		theta_x = -theta_x
 		bhat = -bhat
 	}
+	if (!is.null(zmat)) {
+		mj2 = ncol(djump)
+		zcoefs = bhat[(mj2 - np + 1):mj2]
+     		df_obs = sum(abs(bhat) > 0)
+		#df_obs = df		
+		prior.w = 1:n*0 + 1
+ 		w = diag(as.vector(prior.w / deriv.fun(theta, fml = family$family)))
+     		sse1 = sum(prior.w * (y - theta)^2)
+     		if ((n - np - 1.5 * (df_obs - np)) <= 0) {
+			sdhat2 = sse1
+     		} else {
+			sdhat2 = sse1 / (n - np - 1.5 * (df_obs - np))
+     		}
+     		if (wt.iter) {
+			se2 = solve(t(zmat) %*% w %*% zmat)
+     		} else {
+			se2 = solve(t(zmat) %*% diag(prior.w) %*% zmat) * sdhat2
+     		}		 			
+     		se.beta = sqrt(diag(se2))
+     		tstat = zcoefs / se.beta
+     		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
+  	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
 	sse = sum((y - theta)^2)
-	ans = list(pos = i, chpt = jpt, fhat = theta, fhat_x = theta_x, df = df, sse = sse, knots = knots, sub = sub, kts_in = kts_in, bhat = bhat, m_i = m_i, sub = sub, lams = lambdas, lambda = lambda, tr = tr, trr = trr, tru = tru, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat)
+	ans = list(pos = i, chpt = jpt, fhat = theta, fhat_x = theta_x, fhat_eta = etahat, fhat_eta_x = etahat_x, df = df, sse = sse, knots = knots, sub = sub, kts_in = kts_in, bhat = bhat, zcoefs = zcoefs, m_i = m_i, sub = sub, lams = lambdas, lambda = lambda, tr = tr, trr = trr, tru = tru, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat)
 	ans
 }
 
@@ -1999,7 +2146,7 @@ sl_fun = function(xinterp, knots, slopes) {
 #######################
 #bqspline basis matrix# 
 #######################
-bqspl = function(x, m = NULL, knots = NULL, pic = FALSE, spl = TRUE, x0 = NULL) {
+bqspl = function(x, m = NULL, knots = NULL, pic = FALSE, spl = TRUE, x0 = NULL, pnt = FALSE) {
 ############
 #make knots#  
 ############
@@ -2012,6 +2159,11 @@ bqspl = function(x, m = NULL, knots = NULL, pic = FALSE, spl = TRUE, x0 = NULL) 
 		if (!is.null(m)) { 
 			#knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
 			knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
+			#if (pnt) {
+			#	knots = 0:(m-1)/(m-1)*(max(xu)-min(xu))+min(xu)
+			#} else {
+			#	knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
+			#}
 		} else {
 			m0 = 4 + round(n^(1 / 9)) 
 			m1 = m0
@@ -2032,7 +2184,12 @@ bqspl = function(x, m = NULL, knots = NULL, pic = FALSE, spl = TRUE, x0 = NULL) 
 				}
 			}
 			#knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
-		 knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
+		 	knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
+			#if (pnt) {
+			#	knots = 0:(m-1)/(m-1)*(max(xu)-min(xu))+min(xu)
+			#} else {
+			#	knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
+			#}
 		}
 	}
 	t = 1:(m+4)*0
@@ -2192,12 +2349,13 @@ bcspl = function(x, m = NULL, knots = NULL, pic = FALSE, pnt = FALSE, spl = TRUE
 		m = length(knots)
 	} else {
 		if (!is.null(m)) { 
+			knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
 			#knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
-			if (pnt) {
-				knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
-			} else {
-				knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
-			}
+			#if (pnt) {
+			#	knots = 0:(m-1)/(m-1)*(max(xu)-min(xu))+min(xu)
+			#} else {
+			#	knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
+			#}
 		} else {
 			m0 = 4 + round(n^(1 / 9)) 
 			m1 = m0
@@ -2217,12 +2375,13 @@ bcspl = function(x, m = NULL, knots = NULL, pic = FALSE, pnt = FALSE, spl = TRUE
 					m1 = m1 - 1
 				}
 			}
+			knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
 			#knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
-			if (pnt) {
-				knots = 0:(m-1)/(m-1)*(max(x)-min(x))+min(x)
-			} else {
-				knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
-			}
+			#if (pnt) {
+			#	knots = 0:(m-1)/(m-1)*(max(xu)-min(xu))+min(xu)
+			#} else {
+			#	knots = quantile(xu, probs = seq(0, 1, length = m), names = FALSE)
+			#}
 		}
 	}
 	t = 1:(m+6)*0
@@ -2917,10 +3076,11 @@ CicFamily <- function(object) {
   return (ans)
 }
 
+
 ##########
 #make_arp#
 ##########
-make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max = 4, m2 = NULL, lambdas = NULL, pen_fit = NULL, p_fit = NULL, dv0 = NULL, qv0 = NULL, cv = NULL, hs = NULL, ids = NULL) {
+make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max = 2, m2 = NULL, lambdas = NULL, pen_fit = NULL, p_fit = NULL, dv0 = NULL, qv0 = NULL, cv = NULL, hs = NULL, ids = NULL, constr = TRUE) {
 	if (is.null(pen_fit) & is.null(p_fit)) {
 		ps = 1:p_max
 		if (!pnt) {
@@ -2954,12 +3114,20 @@ make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max =
             		qv = qv0
          	}	
 		cv = crossprod(bmat, y)
-         	qans = qprog(qv, cv, sl, 1:nrow(sl)*0, msg = FALSE)	
-		bh = fitted(qans)
-         	qdf = qans$df
-          	fhat0 = bmat %*% bh
-          	d_use = t(qans$xmat)
-          	if (qdf < tdf) {
+#new, for jp:
+		if (constr) {
+         		qans = qprog(qv, cv, sl, 1:nrow(sl)*0, msg = FALSE)	
+			bh = fitted(qans)
+         		qdf = qans$df
+          		fhat0 = bmat %*% bh
+          		d_use = t(qans$xmat)
+		} else {
+			bh = solve(qv0, cv)
+			qdf = tdf 
+			fhat0 = bmat %*% bh	
+			d_use = bmat
+		}          	
+		if (qdf < tdf) {
              		pd = d_use %*% solve(crossprod(d_use), t(d_use))
              		pmat0 = imat - pd
           	} else {
@@ -2983,7 +3151,7 @@ make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max =
    			iter = iter + 1
         		phis[[iter]] = 0
          		bhs[[iter]] = bh
-			r_mats[[iter]] = diag(n)         		
+			r_mats[[iter]] = diag(n)    		
 			fhats[iter, ] = fhat0
          		ess[iter, ] = es
          		aics[iter] = aic		
@@ -3030,13 +3198,25 @@ make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max =
          					qv = crossprod(bmat, solve(r_mat, bmat))                        	
       		        		}
 					cv = crossprod(bmat, solve(r_mat, y))
-                      			qans = qprog(qv, cv, sl, 1:nrow(sl)*0, msg = FALSE)
-                      			bh = fitted(qans)
-                      			fhat = bmat %*% bh
+#new, for jp:
+					if (constr) {
+                      				qans = qprog(qv, cv, sl, 1:nrow(sl)*0, msg = FALSE)
+                      				bh = fitted(qans)
+                      				fhat = bmat %*% bh
+					} else {
+						bh = solve(qv, cv)
+						fhat = bmat %*% bh	
+					}
+#lines(x, fhat, lty = 2, col = nrep)
                       			sm0 = mean((fhat - oldf)^2)	
-            			}		
-				d_use = t(qans$xmat)
-            			qdf = qans$df
+            			}
+				if (constr) {		
+					d_use = t(qans$xmat)
+            				qdf = qans$df
+				} else {
+					d_use = bmat
+					qdf = tdf 
+				}
             			if (qdf < tdf) {
 					pd = d_use %*% solve(crossprod(d_use), t(d_use))
                				pmat0 = imat - pd
@@ -3097,6 +3277,7 @@ make_arp = function(y, pnt = FALSE, dmat = NULL, bmat = NULL, sl = NULL, p_max =
   	rslt = list(phi_use = phi_use, phis = phis, thetahat = bh_use, fhat_use = fhat_use, fhats = fhats, df = tr_use, r_use = r_use, sig_use = sig_use, sigs = sigs, pens = pens, trs = trs, trrs = trrs, aics = aics, aics1 = aics1, aics2 = aics2, aicmin = aicmin, tr_use = tr_use, trr_use = trr_use, es_use = es_use, ess = ess, lambda_use = lambda_use)
   	rslt
 }
+
 
 ############################
 #make theoretical residuals#

@@ -19,7 +19,7 @@ constr = TRUE, param = TRUE)}
     }
     \item{ip(x, sh = 1): }{\eqn{\bold{f_m(x)}} is convex-concave with an inflection point at \eqn{m}. See \code{\link{ip}} for more details.
 }
-    \item{jp(x,  trd1 = -1, trd2 = -1, up = TRUE): }{\eqn{\bold{f_m(x)}} has a jump point at \eqn{m} and smooth otherwise. It is non-increasing in a subinterval which is made of two consecutive knots and contains the jump point \eqn{m}. \eqn{t_{p} \leq \hat{m} \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots. See \code{\link{jp}} for more details.}
+    \item{jp(x,  trd1 = -1, trd2 = -1, up = TRUE): }{\eqn{\bold{f_m(x)}} has a jump point at \eqn{m} and smooth otherwise. It is non-increasing in a subinterval which is made of two consecutive knots and contains the jump point \eqn{m}. \eqn{t_{p} \leq m \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots. See \code{\link{jp}} for more details.}
     }
 }
 
@@ -37,22 +37,22 @@ constr = TRUE, param = TRUE)}
   \item{q}{The degree of penalty. It can be \eqn{1}, \eqn{2} or \eqn{3}. The default is \eqn{q = 3}.}
   \item{pnt}{Logical flag indicating if or not penalized B-splines are used. When pnt is TRUE, penalized B-splines are used; otherwise, unpenalized B-splines are used. The default is pnt = FALSE.}
   \item{pen}{The penalty term when penalized B-splines are used. It can only be a non-negative real number. When the user chooses penalized B-splines, the penalty term is determined inside the main routine if it is not defined by the user; otherwise, the user-defined value is used. The default is pen = \eqn{0}.}
-  \item{arp}{Logical flag indicating if or not the error term is from a stationary autoregressive process of order \eqn{p}, where \eqn{p=1,2,3,4}.  When arp is TRUE, the error term is assumed to follow an AR(p) process; otherwise, it is assumed to be Gaussian. The default is arp = FALSE.}
+  \item{arp}{Logical flag indicating if or not the error term is from a stationary autoregressive process of order \eqn{p}, where \eqn{p\in\{1,2,3,4\}}.  When arp is TRUE, the error term is assumed to follow an AR(p) process; otherwise, it is assumed to be Gaussian. The default is arp = FALSE.}
    \item{ci}{Logical flag. If ci is TRUE, a \eqn{95\%} bootstrap confidence interval of \eqn{m} will be delivered. The default is ci = FALSE.}
   \item{nloop}{The number of simulations used to get a bootstrap confidence interval for the change-point \eqn{m} when ci is TRUE. The default is nloop = 1e+3. }
-  \item{constr}{Logical flag. It is used when \eqn{m} is a jump point. If constr is FALSE, no shape constraint is imposed on the estimated curve; otherwise, a shape constraint is imposed on the estimated curve in a subinterval which is made of two consecutive knots and contains the jump point \eqn{m}. \eqn{t_{p} \leq \hat{m} \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots. See \code{\link{jp}} for more details. The default is constr = TRUE.}
+  \item{constr}{Logical flag. It is used when \eqn{m} is a jump point. If constr is FALSE, no shape constraint is imposed on the estimated curve; otherwise, a shape constraint is imposed on the estimated curve in a subinterval which is made of two consecutive knots and contains the jump point \eqn{m}. \eqn{t_{p} \leq m \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots. See \code{\link{jp}} for more details. The default is constr = TRUE.}
 \item{param}{Logical flag indicating if or not parametric bootstrapping is used. When param is TRUE,  parametric bootstrapping is used; otherwise, nonparametric bootstrapping is used. The default is param = TRUE.}
 }
 
 \details{
-Given a scatterplot of \eqn{(x_i, y_i)}, \eqn{i = 1,\ldots,n}, where \eqn{\bold{x}} is the predictor and \eqn{\bold{y}} is the response which could be Gaussian, Poisson and binomial. The underlying mean curve in this scatterplot is denoted as \eqn{\bold{f_m(x)}}. where \eqn{\bold{f_m(x)}} is a smooth curve with a change-point \eqn{m} which falls in one of the three categories:
+Given a scatterplot of \eqn{(x_i, y_i)}, \eqn{i = 1,\ldots,n}, where \eqn{\bold{x}} is the predictor and \eqn{\bold{y}} is the response which could be Gaussian, Poisson and binomial. The underlying mean curve in this scatterplot is denoted as \eqn{\bold{f_m(x)}}, where \eqn{\bold{f_m(x)}} is a smooth curve with a change-point \eqn{m} which falls in one of the three categories:
 \itemize{
 \item{a mode in a unimodal smooth curve}
 \item{an inflection point in a convex-concave (concave-convex) smooth curve}
 \item{a jump point in an otherwise smooth curve}.
 
 
-For the unimodal case, quadratic B-splines are used; for the inflection-point case, cubic B-splines are used; for the jump-point case, quadratic B-splines along with two extra basis functions, i.e., the ramp basis function and the jump basis function are used.  The ramp basis function ensures that the slope of the estimated mean curve on the left of the jump point could be different from that on the right of the jump point. The jump basis function ensures that the estimated mean curve has a upward or downward jump.
+For the unimodal case, quadratic B-splines are used; for the inflection-point case, cubic B-splines are used; for the jump-point case, quadratic B-splines along with two extra basis functions, i.e., the ramp basis function and the jump basis function are used.  The ramp basis function ensures that the slope of the estimated mean curve on the left of the jump point could be different from that on the right of the jump point. The jump basis function ensures that the estimated mean curve has an upward or downward jump.
 
 
 In each case,  the user can choose unpenalized or penalized regression. For the unimodal case, the penalized regression is strongly suggested for its smoothness and robustness in terms of the number and the placement of knots, especially when the response is binomial; for the jump-point case, the user can choose to make a shape-restricted fit or not by setting the parameter constr to be TRUE or FALSE. If constr is TRUE, a jump point will be detected and the monotonicity of the 
@@ -75,8 +75,8 @@ See references cited in this section for more details.
 \item{knots}{The knots used in the regression.}
 \item{fhat}{The estimated mean curve \eqn{\hat{f}_{\hat{m}}}.}
 \item{fhat_x}{The estimated mean curve \eqn{\hat{f}_{\hat{m}}} in the constrained predictor.}
-\item{fhat_eta}{The estimated systematic component given that the response is binomial or Poisson and the change-point is a mode or a jump.}
-\item{fhat_eta_x}{The estimated systematic component in the constrained predictor given that the response is binomial or Poisson and the change-point is a mode or a jump.}
+\item{fhat_eta}{The estimated systematic component given that the response is binomial or Poisson and the change-point is a mode or a jump point.}
+\item{fhat_eta_x}{The estimated systematic component in the constrained predictor given that the response is binomial or Poisson and the change-point is a mode or a jump point.}
 \item{coefs}{The estimated coefficients of the B-spline basis functions for the shape-restricted predictor and the matrix whose columns represent the parametrically modelled categorical covariate if the user includes any in the model.}
 \item{zcoefs}{The estimated coefficients of the matrix whose columns represent the parametrically modelled categorical covariate if the user includes any in the model.}
 \item{cibt}{A \eqn{95\%} bootstrap confidence interval of \eqn{m} given that the parameter ci is TRUE.}
@@ -88,8 +88,8 @@ See references cited in this section for more details.
 \item{znm}{The name of the parametrically modelled categorical covariate.}
 \item{ynm}{The name of the response variable.}
 \item{m_i}{The centering value for the ramp edge in the jump-point case.}
-\item{pos}{The position of the knot \eqn{t_p} such that \eqn{t_{p} \leq \hat{m} \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots.}
-\item{sub}{The subinterval in which constrained regression is made for the jump-point case. It is of the form \eqn{[t_{p}, t_p+1]}. \eqn{t_{p} \leq \hat{m} \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots.}
+\item{pos}{The position of the knot \eqn{t_p} such that \eqn{t_{p} \leq m \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots.}
+\item{sub}{The subinterval in which constrained regression is made for the jump-point case. It is of the form \eqn{[t_{p}, t_p+1]}. \eqn{t_{p} \leq m \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots.}
 \item{family}{The family parameter in a changept formula.}
 \item{wt.iter}{Logical flag indicating if or not iteratively re-weighted cone projections may be used. If the response is Gaussian, then wt.iter = FALSE; if the response is binomial or Poisson, then wt.iter = TRUE.}
 \item{zmat}{A matrix whose columns represent the parametrically modelled categorical covariate if the user includes any in the model. The user can choose to include a constant vector in it or not. It must be of full column rank.}
@@ -101,13 +101,13 @@ See references cited in this section for more details.
 \item{tms}{The terms object extracted by the generic function \bold{terms} from a changept fit. See the official help page (\url{http://stat.ethz.ch/R-manual/R-patched/library/stats/html/terms.html}) of the \bold{terms} function for more details.}
 \item{msbt}{A bootstrap distribution of \eqn{m} given that the parameter ci is TRUE.}
 \item{bmat}{A matrix whose columns are the B-spline basis functions for the shape-restricted predictor.}
-\item{phi}{The vector of estimated autoregressive coefficients when the error term is assumed to follow an AR(p) process.}
-\item{sig}{The estimated standard deviation of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
-\item{aics}{A matrix of AIC values.}
+\item{phi}{The estimated vector of autoregressive coefficients when the error term is assumed to follow an AR(p) process.}
+\item{sig}{The estimated variance of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
+\item{aics}{A matrix of AIC values delivered when the error term is assumed to follow an AR(p) process.}
 \item{lambda}{The penalty term chosen when penalized B-splines are used.}
 \item{lams}{A vector of penalty terms which is necessary when penalized B-splines are used for the AR(p) case.}
-\item{phisbt}{The bootstrap distribution of the estimated autoregressive coefficients when the error term is assumed to follow an AR(p) process.}
-\item{sigsbt}{The bootstrap distribution of the estimated standard deviation of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
+\item{phisbt}{The bootstrap distribution of the vector of estimated autoregressive coefficients when the error term is assumed to follow an AR(p) process.}
+\item{sigsbt}{The bootstrap distribution of the estimated variance of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
 }
 
 \author{
