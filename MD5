@@ -1,8 +1,8 @@
-d5c4f69db615a1f835a90da880529127 *DESCRIPTION
+3c78b0c532fdd0904ddd0e0637995a51 *DESCRIPTION
 d1edece8d935355ff084ebe3ba1a2da7 *NAMESPACE
-efc10078599f47c4822e6693e61d4eda *R/ShapeChange.R
-828539f2e69c89cffa7143929eb0e3bc *man/ShapeChange-package.Rd
-d2a46bc4e94764e00666b3ff8be4eb8d *man/changept.Rd
+1165cad1e4706ed2e9672d375e5e1827 *R/ShapeChange.R
+2ed267feea48c829d3dd21a5d20dfa84 *man/ShapeChange-package.Rd
+c30b88a4050c59557a022e776034ce61 *man/changept.Rd
 578ca656f8a317db6daa339185427179 *man/ip.Rd
 f27885b03ffe09f29dd5c47fe3d89ab3 *man/jp.Rd
 ab658aebe75b224ce14e4284f8cf5985 *man/tp.Rd

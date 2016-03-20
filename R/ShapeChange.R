@@ -1,4 +1,4 @@
-changept = function(formula, family = gaussian(), data = NULL, k = NULL, knots = NULL, fir = FALSE, q = 3, pnt = FALSE, pen = 0, arp = FALSE, ci = FALSE, nloop = 1e+3, constr = TRUE, param = TRUE)
+changept = function(formula, family = gaussian(), data = NULL, k = NULL, knots = NULL, fir = FALSE, q = 3, pnt = FALSE, pen = 0, arp = FALSE, ci = FALSE, nloop = 1e+3, constr = TRUE, param = TRUE, gcv = FALSE)
 {
 	cl = match.call()
 	if (is.character(family)) 
@@ -110,15 +110,15 @@ changept = function(formula, family = gaussian(), data = NULL, k = NULL, knots =
 	if (!is.null(zmat)) {
 		colnames(zmat) = paste(znms, vals[(length(vals) - ncol(zmat) + 1):length(vals)], sep = "")
 	}
-  	ans = changept.fit(x, y, zmat = zmat, family = family, categ = categ, m = k, knots = knots, sh = sh, fir = fir, q = q, pnt = pnt, pen = pen, arp = arp, ci = ci, nloop = nloop, trd1 = trd1, trd2 = trd2, up = up, constr = constr, wt.iter = wt.iter, param = param)
-  	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, coefs = ans$bhat, zcoefs = ans$zcoefs, cibt = ans$cibt, categ = categ, sh = sh, x = x, y = y, xnm = xnm, znms = znms, ynm = ynm, m_i = ans$m_i, pos = ans$pos, sub = ans$sub, family = family, wt.iter = wt.iter, zmat = zmat, vals = vals, is_fac = is_fac, zid = zid, zid1 = zid1, zid2 = zid2, tms = mt, msbt = ans$msbt, bmat = ans$bmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, lambda = ans$lambda, lams = ans$lams, phisbt = ans$phisbt, sigsbt = ans$sigsbt)
+  	ans = changept.fit(x, y, zmat = zmat, family = family, categ = categ, m = k, knots = knots, sh = sh, fir = fir, q = q, pnt = pnt, pen = pen, arp = arp, ci = ci, nloop = nloop, trd1 = trd1, trd2 = trd2, up = up, constr = constr, wt.iter = wt.iter, param = param, gcv = gcv)
+  	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, coefs = ans$bhat, zcoefs = ans$zcoefs, cibt = ans$cibt, categ = categ, sh = sh, x = x, y = y, xnm = xnm, znms = znms, ynm = ynm, m_i = ans$m_i, pos = ans$pos, sub = ans$sub, family = family, wt.iter = wt.iter, zmat = zmat, vals = vals, is_fac = is_fac, zid = zid, zid1 = zid1, zid2 = zid2, tms = mt, msbt = ans$msbt, bmat = ans$bmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, lambda = ans$lambda, edf = ans$tr, edfu = ans$tru, lams = ans$lams, phisbt = ans$phisbt, sigsbt = ans$sigsbt)
   	rslt$call = cl
   	class(rslt) = "ShapeChange"
   	return (rslt) 
 }
 
 ########
-changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m = NULL, knots = NULL, sh = 1, fir = FALSE, q = 3, pnt = FALSE, pen = 0, arp = FALSE, lambdas = NULL, ci = FALSE, nloop = 1e+3, trd1 = -1, trd2 = -1, up = TRUE, constr = TRUE, wt.iter = wt.iter, param = TRUE, hs0 = NULL, ids0 = NULL) {
+changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m = NULL, knots = NULL, sh = 1, fir = FALSE, q = 3, pnt = FALSE, pen = 0, arp = FALSE, lambdas = NULL, ci = FALSE, nloop = 1e+3, trd1 = -1, trd2 = -1, up = TRUE, constr = TRUE, wt.iter = wt.iter, param = TRUE, hs0 = NULL, ids0 = NULL, gcv = FALSE) {
 	n = length(y)
 	if (is.null(hs0) && arp) {  	
      		hs0 = 0:(n - 1)
@@ -127,13 +127,13 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
      		ids0 = sapply(hs0, function(h) {which(abs(id_mat) == h)})
 	}
 	if (categ == "inflect") {
-		ans = ip.kts(x, y, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, sh = sh, fir = fir, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family) 
+		ans = ip.kts(x, y, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, sh = sh, fir = fir, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv) 
 	} else if (categ == "mode") {
-		ans = mode.kts(x, y, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, sh = sh, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family) 
+		ans = mode.kts(x, y, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, sh = sh, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv) 
 	} else if (categ == "jp") {
 		minsse = sum(y^2)
 		for (i in 1:(n - 1)) {
-			ansi = jp.pts(x, y, zmat = zmat, jpt = (sort(x))[i], i = NULL, m = m, knots = knots, q = q, pen = pen, pnt = pnt, up = up, trd1 = trd1, trd2 = trd2, constr = constr, wt.iter = wt.iter, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, hs = hs0, ids = ids0, family = family) 		
+			ansi = jp.pts(x, y, zmat = zmat, jpt = (sort(x))[i], i = NULL, m = m, knots = knots, q = q, pen = pen, pnt = pnt, up = up, trd1 = trd1, trd2 = trd2, constr = constr, wt.iter = wt.iter, arp = arp, lambdas = lambdas, pen_bt = NULL, p_bt = NULL, hs = hs0, ids = ids0, family = family, gcv = gcv) 		
 			ssei = sum((y - ansi$fhat)^2)
 			if (ssei < minsse) { 
 				minsse = ssei; ans = ansi  
@@ -189,15 +189,15 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
 				ysim  = rpois(n, lambda = yvec)
 			} 
 			if (categ == "inflect") {
-				ansj = try(ip.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, fir = fir, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family))
+				ansj = try(ip.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, fir = fir, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv))
         			if (class(ansj) == "try-error") next 
 			} else if (categ == "mode") {            
-				ansj = try(mode.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family))
+				ansj = try(mode.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv))
         			if (class(ansj) == "try-error") next 
 			} else if (categ == "jp") {
 				minsse = sum(ysim^2)				
 				for (i in 1:(n - 1)) {
-					ansi = try(jp.pts(x, ysim, zmat = zmat, jpt = sort(x)[i], i = NULL, m = m, knots = knots, q = q, pen = pen, pnt = pnt, up = up, trd1 = trd1, trd2 = trd2, constr = constr, wt.iter = wt.iter, arp = arp, lambdas = lambdas, pen_bt = ans_pen, p_bt = ans_p, hs = hs0, ids = ids0, family = family))
+					ansi = try(jp.pts(x, ysim, zmat = zmat, jpt = sort(x)[i], i = NULL, m = m, knots = knots, q = q, pen = pen, pnt = pnt, up = up, trd1 = trd1, trd2 = trd2, constr = constr, wt.iter = wt.iter, arp = arp, lambdas = lambdas, pen_bt = ans_pen, p_bt = ans_p, hs = hs0, ids = ids0, family = family, gcv = gcv))
 					if (class(ansi) == "try-error") next 
 #new:
 					if (arp) {
@@ -230,7 +230,7 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
   	}
 	cibt = quantile(sort(msbt), probs = c(.025, .975))
 	}
-	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, sse = ans$sse, df = ans$df, pos = ans$pos, dist = ans$dist, bhat = ans$bhat, zcoefs = ans$zcoefs, pvals.beta = ans$pvals.beta, se.beta = ans$se.beta, tval = ans$tval, cibt = cibt, m_i = ans$m_i, sub = ans$sub, tr = ans$tr, trr = ans$trr, tru = ans$tru, msbt = msbt, phisbt = phisbt, psbt = psbt, sigsbt = sigsbt, bmat = ans$bmat, dmat = ans$dmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, aiclst = ans$aiclst, es = ans$es, lambda = ans$lambda, lams = ans$lams, rmat = ans$rmat, aicmat = ans$aicmat, sigmat = ans$sigmat, trsmat = ans$trsmat, trrsmat = ans$trrsmat, psmat = ans$psmat, fsmat = ans$fsmat, phismat = ans$phismat, psmat = ans$psmat, pensmat = ans$pensmat, hs = hs0, ids = ids0)
+	rslt = list(chpt = ans$chpt, knots = ans$knots, fhat = ans$fhat, fhat_x = ans$fhat_x, fhat_eta = ans$fhat_eta, fhat_eta_x = ans$fhat_eta_x, sse = ans$sse, df = ans$df, pos = ans$pos, dist = ans$dist, bhat = ans$bhat, zcoefs = ans$zcoefs, pvals.beta = ans$pvals.beta, se.beta = ans$se.beta, tval = ans$tval, cibt = cibt, m_i = ans$m_i, sub = ans$sub, tr = ans$tr, trr = ans$trr, tru = ans$tru, msbt = msbt, phisbt = phisbt, psbt = psbt, sigsbt = sigsbt, bmat = ans$bmat, dmat = ans$dmat, phi = ans$phi, sig = ans$sig, aics = ans$aics, aiclst = ans$aiclst, es = ans$es, lambda = ans$lambda, lams = ans$lams, edfs = ans$edfs, gcvus = ans$gcvus, lambdas_pen = ans$lambdas_pen, rmat = ans$rmat, aicmat = ans$aicmat, sigmat = ans$sigmat, trsmat = ans$trsmat, trrsmat = ans$trrsmat, psmat = ans$psmat, fsmat = ans$fsmat, phismat = ans$phismat, psmat = ans$psmat, pensmat = ans$pensmat, hs = hs0, ids = ids0)
 	rslt
 }
 
@@ -630,33 +630,66 @@ predict.ShapeChange = function(object, newData,...) {
  }
 
 ############################
-#find penalty terms for arp#
+#find penalty terms #
 ############################
-find_pen = function(aims = NULL, Q = NULL, B = NULL, D = NULL, PNT = TRUE) {
-         la = length(aims)
-         lambdas = NULL
-         if (PNT) {
-            for (i in 1:la) {
-              x.l = 1e+10; x.r = 1e-10                        
-              f = function(pen0) sum(diag(B %*% solve((Q + pen0 * D), t(B)))) - aims[i]
-              if (abs(f(x.r)) < 1e-4) {
-                 lambda = 0
-              } else {
-                lambda = uniroot(f, c(x.l, x.r), tol = 1e-8)$root
-              }
-              lambdas = c(lambdas, lambda)
-           }
-         } else {
-           lambdas = 0
-	 }
-         lambdas
+find_pen = function(aims = NULL, Q = NULL, B = NULL, D = NULL, PNT = TRUE, Y = NULL, D0 = NULL, GCV = FALSE) {
+        la = length(aims)
+        lam_use = lambdas = NULL
+	gcvus = NULL
+	if (!GCV) {         
+		if (PNT) {
+        	    for (i in 1:la) {
+        	      x.l = 1e+10; x.r = 1e-10                        
+        	      f = function(pen0) sum(diag(B %*% solve((Q + pen0 * D), t(B)))) - aims[i]
+        	      if (abs(f(x.r)) < 1e-4) {
+        	         lambda = 0
+        	      } else {
+        	        lambda = uniroot(f, c(x.l, x.r), tol = 1e-8)$root
+        	      }
+        	      lambdas = c(lambdas, lambda)
+        	   }
+        	 } else {
+        	   lambdas = 0
+		 }
+         	 #lambdas
+	} else {
+		n = length(Y)
+		for (i in 1:la) {
+#x.r is the smallest possible lambda
+        	 	x.l = 1e+10; x.r = 1e-10                        
+        		f = function(pen0) sum(diag(B %*% solve((Q + pen0 * D), t(B)))) - aims[i]
+        		if (abs(f(x.r)) < 1e-4) {
+        	        	lambda = 0
+        	      	} else {
+        	        	lambda = uniroot(f, c(x.l, x.r), tol = 1e-8)$root
+        	      	}
+			pmatu = B %*% solve((crossprod(B) + lambda * crossprod(D0)), t(B)) 
+		 	muhatu = pmatu %*% Y
+		 	sseu = sum((Y - muhatu)^2)
+		 	#edfu = sum(diag(pmat))
+			edfu = aims[i]
+		 	gcvu = sseu / (1 - edfu/n)^2
+        	      	lambdas = c(lambdas, lambda)
+			gcvus = c(gcvus, gcvu)
+        	 }
+	}
+	if (!GCV) {
+		lam_use = lambdas
+	} else {
+		lam_use = lambdas[gcvus == min(gcvus)]
+		if (length(lam_use) > 1) {
+			stop ('Check find_pen!')
+		}
+	}
+        rslt = list(lam_use = lam_use, lambdas = lambdas, gcvus = gcvus)
+	rslt 
 }
 
 
 #############
 #mode.kts#
 #############
-mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pen = 0, pnt = FALSE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian()) {
+mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pen = 0, pnt = FALSE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian(), gcv = FALSE) {
 	linkfun = family$linkfun
 	cicfamily = CicFamily(family)
 	llh.fun = cicfamily$llh.fun
@@ -718,6 +751,10 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
   	slopes = ans$slopes
 	m = length(bmat) / n
   	la = 1
+#new: return edfs
+	edfs = NULL
+	gcvus = NULL
+	lambda = lambdas = lambdas_pen = NULL
 	if (pnt) {
 		dmat = matrix(0, nrow = (m - q), ncol = m)
 #  third-order
@@ -752,9 +789,28 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
           			#}
 				if (pen == 0) {
 					if (m < 6) {
-	             				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = m
+						} else {
+							edfs = m:(m+2)
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+	             				pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
+						
 					} else {
-						pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = 6
+						} else {
+							edfs = 6:8
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+						pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					}
 		        	}
           			lambdas = pen 
@@ -765,9 +821,11 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
          			} else {
             				aims = 5:10
          			}
+				edfs = aims 
          			if (is.null(lambdas)) {
             				if (pen == 0) {
-               					lambdas = find_pen(aims = aims, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						ans_pen = find_pen(aims = aims, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+               					lambdas = ans_pen$lam_use
             				} else {
                					lambdas = pen
             				}
@@ -782,7 +840,6 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 		dmat = NULL 
 	}
 	dfmat = bmat %*% solve(qv, t(bmat))
-	lambda = lambdas = 0
   	pos = pos2 = NULL
 	tr = trr = sig = aics = es = rmat = phi = minsse = NULL
 	aiclst = aicmat = sigmat = trsmat = trrsmat = trslst = psmat = fsmat = phismat = psmat = pensmat = NULL
@@ -811,7 +868,7 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
           			fhat = bmat %*% bh
           			fhat_x = bmat[, 1:(m2 + 1), drop = FALSE] %*% bh[1:(m2 + 1), , drop = FALSE]
 				sse = mean((y - fhat)^2)
-				if (sse < minsse) {thb = fhat; thb_x = fhat_x; minsse = sse; pos = j; bhat = bh; tr = tr_use0; lambda = lambdas}
+				if (sse < minsse) {thb = fhat; thb_x = fhat_x; minsse = sse; pos = j; bhat = bh; tr = tr_use0; lambda = pen}
        			} 
        			pos2 = c(pos2, pos)
        			pos_use = round(mean(pos2))
@@ -883,9 +940,27 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
           		dv0 = crossprod(dmat)
           		if (pen == 0) {
 				if (m < 6) {
-             				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					if (!gcv) {
+# the unconstr number of columns of bmat 
+						edfs = m
+					} else {
+						edfs = m:(m+2)
+					}
+					ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+             				pen = ans_pen$lam_use
+					gcvus = ans_pen$gcvus
+					lambdas_pen = ans_pen$lambdas 
 				} else {
-					pen = find_pen(aims = 6, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					if (!gcv) {
+# the unconstr number of columns of bmat 
+						edfs = 6
+					} else {
+						edfs = 6:8
+					}
+					ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+					pen = ans_pen$lam_use
+					gcvus = ans_pen$gcvus
+					lambdas_pen = ans_pen$lambdas 
 				}
 	        	}
 			lambda = pen; lambdas = pen 
@@ -1073,14 +1148,14 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 	chpt = chpt * (max(xs) - min(xs)) + min(xs)
 	knots = knots * (max(xs) - min(xs)) + min(xs)
 	if (!wt.iter) {thb_eta_x = thb_x; thb_eta = thb}
-	ans = list(fhat = thb, fhat_x = thb_x, fhat_eta = thb_eta, fhat_eta_x = thb_eta_x, bhat = bhat, sse = minsse, pos = pos, chpt = chpt, knots = knots, dmat = dmat, tr = tr, trr = trr, tru = tr_use0, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, aiclst = aiclst, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, psmat = psmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
+	ans = list(fhat = thb, fhat_x = thb_x, fhat_eta = thb_eta, fhat_eta_x = thb_eta_x, bhat = bhat, sse = minsse, pos = pos, chpt = chpt, knots = knots, dmat = dmat, tr = tr, trr = trr, tru = tr_use0, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, aiclst = aiclst, es = es, lambda = lambda, lams = lambdas, edfs = edfs, gcvus = gcvus, lambdas_pen = lambdas_pen, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, psmat = psmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
 	ans 
 }
 
 ########
 #ip.kts#
 ########
-ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt = FALSE, sh = 1, fir = FALSE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian()) {
+ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt = FALSE, sh = 1, fir = FALSE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian(), gcv = FALSE) {
 	linkfun = family$linkfun
 	cicfamily = CicFamily(family)
 	llh.fun = cicfamily$llh.fun
@@ -1137,6 +1212,9 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
   	qv = qv0 
   	la = 1	
 	dmat = dv0 = NULL
+	edfs = NULL
+	gcvus = NULL
+	lambda = lambdas = lambdas_pen = NULL 
 	if (pnt) {
 		dmat = matrix(0, nrow = (m - q), ncol = m)
 #  third-order
@@ -1171,9 +1249,27 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
           			#}
 				if (pen == 0) {
 					if (m < 8) {
-	             				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = m
+						} else {
+							edfs = m:(m+2)
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+	             				pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					} else {
-						pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = 8
+						} else {
+							edfs = 8:10
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+						pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					}
 		        	}
           			lambdas = pen 
@@ -1184,8 +1280,10 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
          			}  else {
             				aims = 5:10
          			}
+				edfs = aims
          			if (is.null(lambdas)) {
-            				lambdas = find_pen(aims = aims, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					ans_pen = find_pen(aims = aims, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+            				lambdas = ans_pen$lam_use
          			}
        			} 
        			if (!is.null(p_bt)) {
@@ -1198,7 +1296,6 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 	tru = tr_use = sum(diag(dfmat))
 	dfmat = bmat %*% solve(qv, t(bmat))
 	aics = minsse = nrep = pos = pos2 = NULL
-	lambda = lambdas = 0 
 	tr = sig = aics = es = rmat = phi = NULL
 	aicmat = sigmat = trsmat = trrsmat = trslst = psmat = fsmat = phismat = psmat = pensmat = NULL
  	tr_use0 = tr_use = trr_use = NULL
@@ -1247,7 +1344,7 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
             			fhat = bmat %*% bh
             			fhat_x = bmat[, 1:(m2 + 2), drop = FALSE] %*% bh[1:(m2 + 2), ,drop = FALSE]
             			sse = sum((y - fhat)^2)
-			      	if (sse < minsse) {thb = fhat; thb_x = fhat_x; minsse = sse; pos = j; bhat = bh; tr = tr_use0; lambda = lambdas}   
+			      	if (sse < minsse) {thb = fhat; thb_x = fhat_x; minsse = sse; pos = j; bhat = bh; tr = tr_use0; lambda = pen}   
        			}
        			pos2 = c(pos2, pos)
        			pos_use = round(mean(pos2))
@@ -1310,9 +1407,27 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 #print (pen)
 			if (pen == 0) {
 				if (m < 8) {
-        				pen = find_pen(aims = m, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					if (!gcv) {
+# the unconstr number of columns of bmat 
+						edfs = m
+					} else {
+						edfs = m:(m+2)
+					}
+					ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+        				pen = ans_pen$lam_use
+					gcvus = ans_pen$gcvus
+					lambdas_pen = ans_pen$lambdas 
 				} else {
-					pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+					if (!gcv) {
+# the unconstr number of columns of bmat 
+						edfs = 8
+					} else {
+						edfs = 8:10
+					}
+					ans_pen = find_pen(aims = edfs, Q = qv0, B = bmat, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+					pen = ans_pen$lam_use
+					gcvus = ans_pen$gcvus
+					lambdas_pen = ans_pen$lambdas 
 				}
 			} 
 			qv = qv0 + pen * dv0
@@ -1589,14 +1704,14 @@ ip.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt
 	chpt = chpt * (max(xs) - min(xs)) + min(xs)
 #new: scale knots back
 	knots = knots * (max(xs) - min(xs)) + min(xs)
-	ans = list(fhat = thb, fhat_x = thb_x, bhat = bhat, sse = minsse, chpt = chpt, knots = knots, tr = tr, tru = tru, pos = pos, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
+	ans = list(fhat = thb, fhat_x = thb_x, bhat = bhat, sse = minsse, chpt = chpt, knots = knots, tr = tr, tru = tru, pos = pos, dist = dist, sub = sub, zcoefs = zcoefs, pvals.beta = pvals.beta, se.beta = se.beta, tval = tstat, bmat = bmat, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, edfs = edfs, gcvus = gcvus, lambdas_pen = lambdas_pen, rmat = rmat, aicmat = aicmat, sigmat = sigmat, trsmat = trsmat, trrsmat = trrsmat, fsmat = fsmat, phismat = phismat, pensmat = pensmat)
 	 ans 
 }
 
 ###########
 #jp.pts   #
 ###########		
-jp.pts = function(x, y, zmat = NULL, jpt, i = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt = FALSE, up = TRUE, trd1 = -1, trd2 = -1, constr = TRUE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian()) {	
+jp.pts = function(x, y, zmat = NULL, jpt, i = NULL, m = NULL, knots = NULL, q = 3, pen = 0, pnt = FALSE, up = TRUE, trd1 = -1, trd2 = -1, constr = TRUE, wt.iter = FALSE, arp = FALSE, lambdas = NULL, pen_bt = NULL, p_bt = NULL, hs = NULL, ids = NULL, family = gaussian(), gcv = FALSE) {	
 	linkfun = family$linkfun
 	cicfamily = CicFamily(family)
 	llh.fun = cicfamily$llh.fun
@@ -1665,7 +1780,9 @@ jp.pts = function(x, y, zmat = NULL, jpt, i = NULL, m = NULL, knots = NULL, q = 
 		np = ncol(zmat)
 	}
 #new: pnt, qv
-	lambda = lambdas = 0 
+	gcvus = NULL
+	edfs = NULL
+	lambda = lambdas = lambdas_pen = NULL
 	tr = tru = sub = kts_in = NULL
 	rmat = phi = sig = aics = tr = trr = es = theta = etahat = theta_x = etahat_x = NULL
 	if (constr) {
@@ -1816,9 +1933,27 @@ smat[m + 1, mj - 1] = 1
           			#}
 				if (pen == 0) {
 					if (mj2 < 8) {
-	             				pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = mj2
+						} else {
+							edfs = mj2:(mj2+2)
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+	             				pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					} else {
-						pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = 8
+						} else {
+							edfs = 8:10
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+						pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					}
 		        	}
           			lambdas = pen
@@ -1829,9 +1964,11 @@ smat[m + 1, mj - 1] = 1
          			} else {
             				aims = 5:10
          			}
+				edfs = aims
          			if (is.null(lambdas)) {
             				if (pen == 0) {
-               					lambdas = find_pen(aims = aims, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						ans_pen = find_pen(aims = aims, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+               					lambdas = ans_pen$lam_use
             				} else {
                					lambdas = pen
             				}
@@ -1889,9 +2026,27 @@ smat[m + 1, mj - 1] = 1
 				#}
 				if (pen == 0) {
 					if (mj2 < 8) {
-	             				pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = mj2
+						} else {
+							edfs = mj2:(mj2+2)
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+	             				pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					} else {
-						pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = 8
+						} else {
+							edfs = 8:10
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+						pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					}
 		        	}
 				qvk = qvk + pen * dv0
@@ -1970,9 +2125,27 @@ smat[m + 1, mj - 1] = 1
        				if (!arp) {
 					if (pen == 0) {
 						if (mj2 < 8) {
-	             					pen = find_pen(aims = mj2, Q = qv0, B = djump, D = dv0, PNT = pnt)
+							if (!gcv) {
+# the unconstr number of columns of bmat 
+								edfs = mj2
+							} else {
+								edfs = mj2:(mj2+2)
+							}
+							ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+	             					pen = ans_pen$lam_use
+							gcvus = ans_pen$gcvus
+							lambdas_pen = ans_pen$lambdas 
 						} else {
-							pen = find_pen(aims = 8, Q = qv0, B = djump, D = dv0, PNT = pnt)
+							if (!gcv) {
+# the unconstr number of columns of bmat 
+								edfs = 8
+							} else {
+								edfs = 8:10
+							}
+							ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+							pen = ans_pen$lam_use
+							gcvus = ans_pen$gcvus
+							lambdas_pen = ans_pen$lambdas 
 						}
 		        		}
           				lambdas = pen
@@ -1983,9 +2156,11 @@ smat[m + 1, mj - 1] = 1
          				} else {
             					aims = 5:10
          				}
+					edfs = aims
          				if (is.null(lambdas)) {
             					if (pen == 0) {
-               						lambdas = find_pen(aims = aims, Q = qv0, B = djump, D = dv0, PNT = pnt)
+							ans_pen = find_pen(aims = aims, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+               						lambdas = ans_pen$lam_use
             					} else {
                						lambdas = pen
             					}
@@ -2043,9 +2218,27 @@ smat[m + 1, mj - 1] = 1
 				#}
 				if (pen == 0) {
 					if (mj2 < 8) {
-             					pen = find_pen(aims = mj2, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = mj2
+						} else {
+							edfs = mj2:(mj2+2)
+						} 
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+             					pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					} else {
-						pen = find_pen(aims = 8, Q = qv0, B = bmat, D = dv0, PNT = pnt)
+						if (!gcv) {
+# the unconstr number of columns of bmat 
+							edfs = 8
+						} else {
+							edfs = 8:10
+						}
+						ans_pen = find_pen(aims = edfs, Q = qv0, B = djump, D = dv0, PNT = pnt, Y = y, D0 = dmat, GCV = gcv)
+						pen = ans_pen$lam_use
+						gcvus = ans_pen$gcvus
+						lambdas_pen = ans_pen$lambdas 
 					}
 	        		}
 				qvk = qvk + pen * dv0
@@ -2111,7 +2304,7 @@ smat[m + 1, mj - 1] = 1
      		pvals.beta = 2 * (1 - pt(abs(tstat),  n - np - 1.5 * (df_obs - np))) 
   	} else {zcoefs = pvals.beta = se.beta = tstat = NULL}
 	sse = sum((y - theta)^2)
-	ans = list(pos = i, chpt = jpt, fhat = theta, fhat_x = theta_x, fhat_eta = etahat, fhat_eta_x = etahat_x, df = df, sse = sse, knots = knots, sub = sub, kts_in = kts_in, bhat = bhat, zcoefs = zcoefs, m_i = m_i, sub = sub, lams = lambdas, lambda = lambda, tr = tr, trr = trr, tru = tru, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat)
+	ans = list(pos = i, chpt = jpt, fhat = theta, fhat_x = theta_x, fhat_eta = etahat, fhat_eta_x = etahat_x, df = df, sse = sse, knots = knots, sub = sub, kts_in = kts_in, bhat = bhat, zcoefs = zcoefs, m_i = m_i, sub = sub, lams = lambdas, lambda = lambda, edfs = edfs, gcvus = gcvus, lambdas_pen = lambdas_pen, tr = tr, trr = trr, tru = tru, phi = phi, sig = sig, aics = aics, es = es, lambda = lambda, lams = lambdas, rmat = rmat)
 	ans
 }
 

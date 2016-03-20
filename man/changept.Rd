@@ -7,7 +7,7 @@
 
 \usage{changept(formula, family = gaussian(), data = NULL, k = NULL, knots = NULL, 
 fir = FALSE, q = 3, pnt = FALSE, pen = 0, arp = FALSE, ci = FALSE, nloop = 1e+3, 
-constr = TRUE, param = TRUE)}
+constr = TRUE, param = TRUE, gcv = FALSE)}
 
 \arguments{
   \item{formula}{A formula object which gives a symbolic description of the model to be fitted. It has the form "response ~ predictor". The response is a vector of length \eqn{n} and it is from one of the three exponential families: Gaussian, Poisson and binomial. The predictor is a nonparametrically modelled variable with a shape restriction. The user is supposed to indicate the relationship between the underlying mean curve \eqn{\bold{f_m(x)}} and the predictor \eqn{\bold{x}} in the following way:
@@ -42,6 +42,7 @@ constr = TRUE, param = TRUE)}
   \item{nloop}{The number of simulations used to get a bootstrap confidence interval for the change-point \eqn{m} when ci is TRUE. The default is nloop = 1e+3. }
   \item{constr}{Logical flag. It is used when \eqn{m} is a jump point. If constr is FALSE, no shape constraint is imposed on the estimated curve; otherwise, a shape constraint is imposed on the estimated curve in a subinterval which is made of two consecutive knots and contains the jump point \eqn{m}. \eqn{t_{p} \leq m \leq t_{p+1}, p=1,\ldots,k-1} and \eqn{k} is the number of knots. See \code{\link{jp}} for more details. The default is constr = TRUE.}
 \item{param}{Logical flag indicating if or not parametric bootstrapping is used. When param is TRUE,  parametric bootstrapping is used; otherwise, nonparametric bootstrapping is used. The default is param = TRUE.}
+\item{gcv}{Logical flag indicating if or not the penalty term may be chosen through generalized cross-validation (GCV) methods when pen = TRUE. The default is gcv = FALSE. See Meyer, M.C. (2012) Constrained Penalized Splines. \emph{Canadian Journal of Statistics \bold{40(1)}}, 190--206 for more details.}
 }
 
 \details{
@@ -105,6 +106,8 @@ See references cited in this section for more details.
 \item{sig}{The estimated variance of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
 \item{aics}{A matrix of AIC values delivered when the error term is assumed to follow an AR(p) process.}
 \item{lambda}{The penalty term chosen when penalized B-splines are used.}
+\item{edf}{The constrained effective degrees of freedom.}
+\item{edfu}{The unconstrained effective degrees of freedom.}
 \item{lams}{A vector of penalty terms which is necessary when penalized B-splines are used for the AR(p) case.}
 \item{phisbt}{The bootstrap distribution of the vector of estimated autoregressive coefficients when the error term is assumed to follow an AR(p) process.}
 \item{sigsbt}{The bootstrap distribution of the estimated variance of the white noise of the error term when the error term is assumed to follow an AR(p) process.}
