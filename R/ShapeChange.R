@@ -23,7 +23,8 @@ changept = function(formula, family = gaussian(), data = NULL, k = NULL, knots =
     		y = unname(y)
   	}
 	if (family$family == "binomial") {
-		if (class(y) == "factor") {
+		#if (class(y) == "factor") {
+	  if (inherits(y, "factor")) {
 			y = ifelse(y == levels(y)[1], 0, 1)
 		}
   	}
@@ -209,15 +210,15 @@ changept.fit = function(x, y, zmat = zmat, family = gaussian(), categ = categ, m
 			} 
 			if (categ == "inflect") {
 				ansj = try(ip.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, fir = fir, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv, spl = spl, dmat = dmat, x1 = x1, xn = xn))
-        			if (class(ansj) == "try-error") next 
+        			if (inherits(ansj, "try-error")) next 
 			} else if (categ == "mode") {            
 				ansj = try(mode.kts(x, ysim, zmat = zmat, m = m, knots = knots, q = q, pen = pen, pnt = pnt, arp = arp, lambdas = ans_lam, pen_bt = ans_pen, p_bt = ans_p, sh = sh, wt.iter = wt.iter, hs = hs0, ids = ids0, family = family, gcv = gcv, spl = spl, dmat = dmat, x1 = x1, xn = xn))
-        			if (class(ansj) == "try-error") next 
+        			if (inherits(ansj, "try-error")) next 
 			} else if (categ == "jp") {
 				minsse = sum(ysim^2)				
 				for (i in 1:(n - 1)) {
 					ansi = try(jp.pts(x, ysim, zmat = zmat, jpt = sort(x)[i], i = NULL, m = m, knots = knots, q = q, pen = pen, pnt = pnt, up = up, trd1 = trd1, trd2 = trd2, constr = constr, wt.iter = wt.iter, arp = arp, lambdas = lambdas, pen_bt = ans_pen, p_bt = ans_p, hs = hs0, ids = ids0, family = family, gcv = gcv))
-					if (class(ansi) == "try-error") next 
+					if (inherits(ansj, "try-error")) next 
 #new:
 					if (arp) {
 						rmat = ansi$rmat 
@@ -701,7 +702,7 @@ mode.kts = function(x, y, zmat = NULL, m = NULL, knots = NULL, sh = 1, q = 3, pe
 	dev.fun = cicfamily$dev.fun 
 	xs = sort(x)	
 	ord = order(x)
-  	y = y[ord]
+  y = y[ord]
 #new:must order zmat too!
 	if (!is.null(zmat)) {
 		nzmat = apply(zmat, 2, function(elem) elem[ord])
@@ -3620,113 +3621,115 @@ make_dmat = function(m, q, pnt = FALSE) {
 	return (dmat)
 }
 
+
 ####
 find_chpt = function(dist, pos, m2, knots) {
-#print (dist)
-	sub = NULL
-	sm = 1e-5
-	if (abs(dist[pos]) < sm) {
-		if (pos == 1) {
-			obs.r = 2:m2
-			dist.r = dist[obs.r]
-			if (dist.r[1] < 0) {
-				x.l = knots[pos]
-				x.r = knots[pos]
-			} else if (abs(dist.r[1]) < sm) {
-				if (any(dist.r < 0)) {
-					id.r = (obs.r[dist.r < 0])[1] - 1
-					x.l = knots[pos]
-				 	x.r = knots[id.r]
-				} else {
-					x.l = knots[pos]
-					x.r = knots[m2]
-				}
-			}
-		} else if (pos == m2) {
-			obs.l = 1:(m2 - 1)
-			dist.l = dist[obs.l]
-			if (dist.l[m2 - 1] > sm) {
-				x.l = knots[pos]
-				x.r = knots[pos]
-			} else if (abs(dist.l[m2 - 1]) < sm) {
-				if (any(dist.l > sm)) {
-					id.l = tail(obs.l[dist.l > sm], 1) + 1
-					x.l = knots[id.l] 
-					x.r = knots[pos]
-				} else {
-					x.l = knots[1]
-					x.r = knots[pos]
-				}
-			}
-		} else {
-			obs.l = 1:(pos - 1) 
-			obs.r = (pos + 1):m2
-			dist.l = dist[obs.l]
-			dist.r = dist[obs.r]
-			if (dist.l[pos - 1] > sm) {
-				x.l = knots[pos]
-			} else if (abs(dist.l[pos - 1]) < sm) {
-				if (any(dist.l > sm)) {
-					id.l = tail(obs.l[dist.l > sm], 1) + 1
-					x.l = knots[id.l] 
-					x.r = knots[pos]
-				} else {
-					x.l = knots[1] 
-					x.r = knots[pos]
-				}	
-			}
-			if (dist.r[1] < 0) {
-				x.r = knots[pos]
-			} else if (abs(dist.r[1]) < sm) {
-				if (any(dist.r < (-sm))) {
-					id.r = (obs.r[dist.r < 0])[1] - 1
-					x.l = knots[pos] 
-					x.r = knots[id.r]
-				} else {
-					x.l = knots[pos]
-					x.r = knots[m2]
-				}
-			}
-		}
-		chpt = (x.l + x.r) / 2
-	} 
-	if (dist[pos] < (-sm)) {
-		if (pos == 1) {
-			chpt = knots[pos]
-		} else {
-			if (any(dist > sm)) {
-				if (dist[pos - 1] > sm) {
-					x.l = knots[pos - 1] 
-					x.r = knots[pos]
-					y.l = dist[pos - 1] 
-					y.r = dist[pos]
-					sub = c(x.l, x.r)
-					a = (y.r - y.l) / (x.r - x.l)
-					b = y.r - a * x.r 
-					#chpt = - (y.r - ((y.r - y.l) / (x.r - x.l)) * x.r ) / (y.r - y.l) / (x.r - x.l)
-					f = function(x) a * x + b
-					chpt = uniroot(f, c(x.l, x.r), tol = 1e-8)$root
-				} 
-				if (abs(dist[pos - 1]) < sm) {
-					obs.l = 1:(pos - 1)
-					dist.l = dist[obs.l]
-					id.l = obs.l[dist.l > sm]
-					x.l = knots[tail(id.l, 1) + 1]
-					x.r = knots[pos - 1]
-					chpt = (x.l + x.r) / 2
-					#sub = c(x.l, x.r)
-					y.l = dist[tail(id.l, 1) + 1]
-					y.r = dist[pos - 1]
-				}
-			} else if (all(abs(dist[1:(pos - 1)]) < sm)) {
-				x.l = knots[1]
-				x.r = knots[pos - 1]
-				chpt = (x.l + x.r) / 2
-				y.l = dist[1]
-				y.r = dist[pos]
-				#sub = c(x.l, x.r)
-			}
-		}
-	}
-	return (chpt)	
+  #print (dist)
+  sub = NULL
+  sm = 1e-5
+  if (abs(dist[pos]) < sm) {
+    if (pos == 1) {
+      obs.r = 2:m2
+      dist.r = dist[obs.r]
+      if (dist.r[1] < 0) {
+        x.l = knots[pos]
+        x.r = knots[pos]
+      } else if (abs(dist.r[1]) < sm) {
+        if (any(dist.r < 0)) {
+          id.r = (obs.r[dist.r < 0])[1] - 1
+          x.l = knots[pos]
+          x.r = knots[id.r]
+        } else {
+          x.l = knots[pos]
+          x.r = knots[m2]
+        }
+      }
+    } else if (pos == m2) {
+      obs.l = 1:(m2 - 1)
+      dist.l = dist[obs.l]
+      if (dist.l[m2 - 1] > sm) {
+        x.l = knots[pos]
+        x.r = knots[pos]
+      } else if (abs(dist.l[m2 - 1]) < sm) {
+        if (any(dist.l > sm)) {
+          id.l = tail(obs.l[dist.l > sm], 1) + 1
+          x.l = knots[id.l] 
+          x.r = knots[pos]
+        } else {
+          x.l = knots[1]
+          x.r = knots[pos]
+        }
+      }
+    } else {
+      obs.l = 1:(pos - 1) 
+      obs.r = (pos + 1):m2
+      dist.l = dist[obs.l]
+      dist.r = dist[obs.r]
+      if (dist.l[pos - 1] > sm) {
+        x.l = knots[pos]
+      } else if (abs(dist.l[pos - 1]) < sm) {
+        if (any(dist.l > sm)) {
+          id.l = tail(obs.l[dist.l > sm], 1) + 1
+          x.l = knots[id.l] 
+          x.r = knots[pos]
+        } else {
+          x.l = knots[1] 
+          x.r = knots[pos]
+        }	
+      }
+      if (dist.r[1] < 0) {
+        x.r = knots[pos]
+      } else if (abs(dist.r[1]) < sm) {
+        if (any(dist.r < (-sm))) {
+          id.r = (obs.r[dist.r < 0])[1] - 1
+          x.l = knots[pos] 
+          x.r = knots[id.r]
+        } else {
+          x.l = knots[pos]
+          x.r = knots[m2]
+        }
+      }
+    }
+    chpt = (x.l + x.r) / 2
+  } 
+  if (dist[pos] < (-sm)) {
+    if (pos == 1) {
+      chpt = knots[pos]
+    } else {
+      if (any(dist > sm)) {
+        if (dist[pos - 1] > sm) {
+          x.l = knots[pos - 1] 
+          x.r = knots[pos]
+          y.l = dist[pos - 1] 
+          y.r = dist[pos]
+          sub = c(x.l, x.r)
+          a = (y.r - y.l) / (x.r - x.l)
+          b = y.r - a * x.r 
+          #chpt = - (y.r - ((y.r - y.l) / (x.r - x.l)) * x.r ) / (y.r - y.l) / (x.r - x.l)
+          f = function(x) a * x + b
+          chpt = uniroot(f, c(x.l, x.r), tol = 1e-8)$root
+        } 
+        if (abs(dist[pos - 1]) < sm) {
+          obs.l = 1:(pos - 1)
+          dist.l = dist[obs.l]
+          id.l = obs.l[dist.l > sm]
+          x.l = knots[tail(id.l, 1) + 1]
+          x.r = knots[pos - 1]
+          chpt = (x.l + x.r) / 2
+          #sub = c(x.l, x.r)
+          y.l = dist[tail(id.l, 1) + 1]
+          y.r = dist[pos - 1]
+        }
+      } else if (all(abs(dist[1:(pos - 1)]) < sm)) {
+        x.l = knots[1]
+        x.r = knots[pos - 1]
+        chpt = (x.l + x.r) / 2
+        y.l = dist[1]
+        y.r = dist[pos]
+        #sub = c(x.l, x.r)
+      }
+    }
+  }
+  return (chpt)	
 }
+
